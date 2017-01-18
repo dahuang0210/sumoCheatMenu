@@ -152,7 +152,7 @@ void    fixMakeupBag(void);
 void    battleMenu(void);
 void    maxBattleStats(u32 state);
 void	catch100(void);
-void	shinyPokemon(u32 state);
+void	shinyPokemon(void);
 void    zMoves(u32 state);
 
 

@@ -15,7 +15,7 @@ void    battleMenu(void) {
     // Creates spoiler and cheat entries
     new_spoiler("Battle");
         new_entry("100% Capture Rate", catch100);
-        new_entry_arg("Wild Pokemon Shiny", shinyPokemon, 0, SHINYPOKEMON, TOGGLE);
+        new_entry_managed_note("Wild Pokemon Shiny", "R = Activate\nL = Deactivate", shinyPokemon, SHINYPOKEMON, 0);
         new_entry_arg("Stat Stages +6", maxBattleStats, 0, MAXBATTLESTATS, TOGGLE);
         new_entry_arg("Use Z-Moves w/o Z-Crystal", zMoves, 0, ZMOVES, TOGGLE);
         new_line();
@@ -109,8 +109,11 @@ void	catch100(void) {
 
 
 // Make wild Pokemon shiny
-void	shinyPokemon(u32 state) {
-    WRITEU32(o_shiny, (state) ? 0xEA00001C : 0x0A00001C);
+void	shinyPokemon(void) {
+    if (is_pressed(BUTTON_L))
+        WRITEU32(o_shiny, 0x0A00001C);
+    if (is_pressed(BUTTON_R))
+        WRITEU32(o_shiny, 0xEA00001C);
 }
 
 
