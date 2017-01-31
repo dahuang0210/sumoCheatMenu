@@ -11,28 +11,19 @@
 
 // Define variables to be used
 u8 matchingHair,
-   currentGender,
-   currentSkintone;
+   storedGender,
+   storedSkintone;
 
 u32 o_gender =          0x330D67D5,
-    o_skintone =        0x330D6824,
-    o_appearance =      0x330D67D4,
-    o_keyitems =        0x330D5FEC;
+    o_skintone =        0x330D6824;
 
 
 // Appearance menu entry
 void    appearanceMenu(void) {
 
-    switch(gameVer) {
-        case 10:
-            break;
-        case 11:
-            break;
-    }
-
     // Reads currently set Gender and Skin tone from memory to initialize menu with
-    currentGender = READU8(o_gender);
-    currentSkintone = READU8(o_skintone);
+    storedGender = READU8(o_gender);
+    storedSkintone = READU8(o_skintone);
 
     // Creates spoiler and cheat entries
     new_spoiler("Appearance");
@@ -54,30 +45,31 @@ void    appearanceMenu(void) {
 
 // Changes current gender and skin tone. Sets clothes and hair to default with gender change.
 void    switchLooks(void) {
-
+    u32 offset = 0x330D67D4;
+    u32 currentGender = READU8(o_gender);
     // Runs a check to see if your selected gender is different than current
     // gender and resets clothes and hair to prevent crashing. Writes just skin
     // tone if gender was not changed, preserving appearance
-    if (currentGender == 0x00 && currentGender != READU8(o_gender)) {
+    if (storedGender == 0x00 && storedGender != currentGender) {
         fixMakeupBag();
-        WRITEU8(o_appearance + 0x01, currentGender);
-        WRITEU32(o_appearance + 0x50, 0x00800000 + (matchingHair * 0x0100) + currentSkintone);
-        WRITEU32(o_appearance + 0x54, 0x00040000);
-        WRITEU32(o_appearance + 0x58, 0x0010040C);
-        WRITEU16(o_appearance + 0x5C, 0x1C01);
-        WRITEU8(o_appearance + 0x5E, 0x30);
-    } else if (currentGender == 0x01 && currentGender != READU8(o_gender)) {
+        WRITEU8(offset + 0x01, storedGender);
+        WRITEU32(offset + 0x50, 0x00800000 + (matchingHair * 0x0100) + storedSkintone);
+        WRITEU32(offset + 0x54, 0x00040000);
+        WRITEU32(offset + 0x58, 0x0010040C);
+        WRITEU16(offset + 0x5C, 0x1C01);
+        WRITEU8(offset + 0x5E, 0x30);
+    } else if (storedGender == 0x01 && storedGender != currentGender) {
         fixMakeupBag();
-        WRITEU8(o_appearance + 0x01, currentGender);
-        WRITEU32(o_appearance + 0x50, 0x00800000 + (matchingHair * 0x0100) + currentSkintone);
-        WRITEU32(o_appearance + 0x54, 0x00040000);
-        WRITEU32(o_appearance + 0x58, 0x00100405);
-        WRITEU16(o_appearance + 0x5C, 0x3001);
-        WRITEU8(o_appearance + 0x5E, 0x30);
+        WRITEU8(offset + 0x01, storedGender);
+        WRITEU32(offset + 0x50, 0x00800000 + (matchingHair * 0x0100) + storedSkintone);
+        WRITEU32(offset + 0x54, 0x00040000);
+        WRITEU32(offset + 0x58, 0x00100405);
+        WRITEU16(offset + 0x5C, 0x3001);
+        WRITEU8(offset + 0x5E, 0x30);
     } else {
-        WRITEU8(o_appearance + 0x50, currentSkintone);
+        WRITEU8(offset + 0x50, storedSkintone);
     }
-    WRITEU32(o_appearance + 0x64, 0x00000000);
+    WRITEU32(offset + 0x64, 0x00000000);
 }
 
 
@@ -86,14 +78,14 @@ void    setGender(void) {
 
     // Checks if gender is male and sets it to female or vice versa. Also
     // increases or decreases skin tone value to match gender
-    switch(currentGender) {
+    switch(storedGender) {
         case 0x00:
-            currentGender++;
-            currentSkintone += 0x04;
+            storedGender++;
+            storedSkintone += 0x04;
             break;
         case 0x01:
-            currentGender--;
-            currentSkintone -= 0x04;
+            storedGender--;
+            storedSkintone -= 0x04;
             break;
     }
     updateGender();
@@ -102,21 +94,21 @@ void    setGender(void) {
 
 // Updates menu with current gender
 void    updateGender(void) {
-    replace_pattern(": ******", (currentGender == 0x00) ? ": Male  " : ": Female", SETGENDER);
+    replace_pattern(": ******", (storedGender == 0x00) ? ": Male  " : ": Female", SETGENDER);
 }
 
 
 // Cycles through skintone choices
 void    setSkintone(void) {
-    switch(currentSkintone) {
+    switch(storedSkintone) {
         case 0x18:
-            currentSkintone = 0x00;
+            storedSkintone = 0x00;
             break;
         case 0x1C:
-            currentSkintone = 0x04;
+            storedSkintone = 0x04;
             break;
         default:
-            currentSkintone += 0x08;
+            storedSkintone += 0x08;
     }
     updateSkintone();
 }
@@ -124,7 +116,7 @@ void    setSkintone(void) {
 
 // Updates menu with current skintone and changes hair color to match
 void    updateSkintone(void) {
-    switch(currentSkintone) {
+    switch(storedSkintone) {
         case 0x00:
         case 0x04:
             matchingHair = 0x83;
@@ -152,29 +144,29 @@ void    updateSkintone(void) {
 // Adds or removes Makeup bag based on gender
 void    fixMakeupBag(void) {
     bool moveUp = false;
-    u32 offset = o_keyitems;
-    u32 value = READU16(offset);
+    u32 offset = 0x330D5FEC;
+    u32 data = READU16(offset);
     int i = 0;
-    switch(currentGender) {
+    switch(storedGender) {
         case 0:
-            while(value) {
-                if (value != 0x06C2 && !moveUp) {
+            while(data) {
+                if (data != 0x06C2 && !moveUp) {
                     i += 4;
-                    value = READU16(offset + i);
+                    data = READU16(offset + i);
                 } else {
                     moveUp = true;
-                    value = READU16(offset + i + 4);
-                    WRITEU32(offset + i, value);
+                    data = READU16(offset + i + 4);
+                    WRITEU32(offset + i, data);
                     i += 4;
                 }
             }
             break;
         case 1:
-            while(value) {
-                if (value == 0x06C2)
+            while(data) {
+                if (data == 0x06C2)
                     break;
                 i += 4;
-                value = READU16(offset + i);
+                data = READU16(offset + i);
             }
             WRITEU32(offset + i, 0x06C2);
             break;
