@@ -9,7 +9,7 @@ int gameVer = -1;
 void getVersion(void) {
     protect_region(0x00100000);
     u32 game_check = READU8(0x00100040);
-    switch(gamecheck) {
+    switch(game_check) {
         case 0x30:
             gameVer = 0;
             break;
