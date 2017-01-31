@@ -1,20 +1,22 @@
 #include "cheats.h"
 
 char	*builder_name = "AnalogMan",
-        version[7] = "v0.4.1",
+        version[7] = "v0.4.2",
         formattedVer[23];
 
-int gameVer = 0;
+int gameVer = -1;
 
 void getVersion(void) {
     protect_region(0x00100000);
-
-    if (READU8(0x00100040) == 0x30)
-        gameVer = 10;
-    else if (READU8(0x00100040) == 0x78)
-        gameVer = 11;
-    else
-        new_unselectable_entry("Version not supported");
+    u32 game_check = READU8(0x00100040);
+    switch(gamecheck) {
+        case 0x30:
+            gameVer = 0;
+            break;
+        case 0x78:
+            gameVer = 1;
+            break;
+    }
 }
 
 void    disableOnlineCheats(void) {
@@ -38,6 +40,10 @@ void    always_run(void) {
 
 void	my_menus(void) {
     getVersion();
+    if (gameVer == -1) {
+        new_unselectable_entry("Patch version not supported");
+        return;
+    }
     xsprintf(formattedVer, "%22s", version);
     new_unselectable_entry("Entries w/ an orange background");
     new_unselectable_entry("have notes. Press (Y) to view.");
